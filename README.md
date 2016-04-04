@@ -1,3 +1,3 @@
 ﻿# hunter
-猎赚项目
-Alin jion in
+猎赚项目正式成立
+春儿加入项目
