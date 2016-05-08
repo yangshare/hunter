@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html class="ui-page-login">
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>通信安全demo</title>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link href="css/style.css" rel="stylesheet" />
+		<link rel="stylesheet" href="css/common.css" type="text/css" charset="utf-8" />
+		<style>
+			.area {
+				margin: 20px auto 0px auto;
+			}
+			
+			.mui-input-group:first-child {
+				margin-top: 20px;
+			}
+			
+			.mui-input-group label {
+				width: 22%;
+			}
+			
+			.mui-input-row label~input,
+			.mui-input-row label~select,
+			.mui-input-row label~textarea {
+				width: 78%;
+			}
+			
+			.mui-checkbox input[type=checkbox],
+			.mui-radio input[type=radio] {
+				top: 6px;
+			}
+			
+			.mui-content-padded {
+				margin-top: 25px;
+			}
+			
+			.mui-btn {
+				padding: 10px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">注册</h1>
+		</header>
+		<div class="mui-content">
+			<form class="mui-input-group">
+				<div class="mui-input-row">
+					<label>账号</label>
+					<input id='account' type="text" class="mui-input-clear mui-input" placeholder="请输入账号">
+				</div>
+				<div class="mui-input-row">
+					<label>密码</label>
+					<input id='password' type="password" class="mui-input-clear mui-input" placeholder="请输入密码">
+				</div>
+
+			</form>
+			<div class="mui-content-padded">
+				<button id='reg' class="mui-btn mui-btn-block mui-btn-primary">注册</button>
+			</div>
+
+		</div>
+		<div id="dcontent" class="dcontent" style="margin-top: -50px;">
+
+			<ul class="dlist">
+				<li class="ditem" onclick="getDeviceInfo();">获取设备信息</li>
+				<li class="ditem" onclick="getSysInfo();">获取系统信息</li>
+			</ul>
+		</div>
+		<div id="output" style="height: 120px;">
+			Device可获取手机设备相关信息，包括硬件、软件、网络等信息。
+		</div>
+		<script src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/immersed.js"></script>
+		<script type="text/javascript" src="js/common.js"></script>
+		<script>
+			$(function() {
+				$("#reg").click(function() {
+					$.ajax({
+						type: "POST", //提交方式  
+						url: "http://open.51mypc.cn:29920/SecureCommiute/wUser_registers", //路径  
+						dataType : 'jsonp',  
+        				jsonp:"callback", 
+						data: {
+							"name": $("#account").val(),
+							"pwd": $("#password").val(),
+							"imei": "123456789123456",//plus.device.imei,
+						}, //数据，这里使用的是Json格式进行传输  
+						success: function(result) { //返回数据根据结果进行相应的处理  
+							alert(result.json);
+							window.location.href="login.html";
+						},
+						error: function(XMLHttpRequest, textStatus, errorThrown) {
+							alert(XMLHttpRequest.status);
+							alert(XMLHttpRequest.readyState);
+							alert(textStatus);
+						}
+					});
+				});
+			});
+
+			function getDeviceInfo() {
+				var str = "",
+					i;
+				str += "设备型号：" + plus.device.model + "\n";
+				str += "设备厂商：" + plus.device.vendor + "\n";
+				str += "IMEI：" + plus.device.imei + "\n";
+				str += "UUID: " + plus.device.uuid + "\n";
+				str += "IMSI：";
+				for (i = 0; i < plus.device.imsi.length; i++) {
+					str += plus.device.imsi[i];
+				}
+				str += "\n";
+				str += "屏幕分辨率：" + plus.screen.resolutionWidth * plus.screen.scale + " x " + plus.screen.resolutionHeight * plus.screen.scale + "\n";
+				str += "DPI：" + plus.screen.dpiX + " x " + plus.screen.dpiY;
+				outSet(str);
+			}
+
+			function getSysInfo() {
+				var str = "";
+				str += "名称：" + plus.os.name + "\n";
+				str += "版本：" + plus.os.version + "\n";
+				str += "语言：" + plus.os.language + "\n";
+				str += "厂商：" + plus.os.vendor + "\n";
+				str += "网络类型：";
+				var types = {};
+				types[plus.networkinfo.CONNECTION_UNKNOW] = "未知";
+				types[plus.networkinfo.CONNECTION_NONE] = "未连接网络";
+				types[plus.networkinfo.CONNECTION_ETHERNET] = "有线网络";
+				types[plus.networkinfo.CONNECTION_WIFI] = "WiFi网络";
+				types[plus.networkinfo.CONNECTION_CELL2G] = "2G蜂窝网络";
+				types[plus.networkinfo.CONNECTION_CELL3G] = "3G蜂窝网络";
+				types[plus.networkinfo.CONNECTION_CELL4G] = "4G蜂窝网络";
+				str += types[plus.networkinfo.getCurrentType()];
+				outSet(str);
+			}
+		</script>
+	</body>
+
+</html>
