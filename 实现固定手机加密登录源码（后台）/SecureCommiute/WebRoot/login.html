@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="ui-page-login">
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>通信安全demo</title>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link href="css/style.css" rel="stylesheet" />
+		<style>
+			.area {
+				margin: 20px auto 0px auto;
+			}
+			
+			.mui-input-group {
+				margin-top: 10px;
+			}
+			
+			.mui-input-group:first-child {
+				margin-top: 20px;
+			}
+			
+			.mui-input-group label {
+				width: 22%;
+			}
+			
+			.mui-input-row label~input,
+			.mui-input-row label~select,
+			.mui-input-row label~textarea {
+				width: 78%;
+			}
+			
+			.mui-checkbox input[type=checkbox],
+			.mui-radio input[type=radio] {
+				top: 6px;
+			}
+			
+			.mui-content-padded {
+				margin-top: 25px;
+			}
+			
+			.mui-btn {
+				padding: 10px;
+			}
+			
+			.link-area {
+				display: block;
+				margin-top: 25px;
+				text-align: center;
+			}
+			
+			.spliter {
+				color: #bbb;
+				padding: 0px 8px;
+			}
+			
+			.oauth-area {
+				position: absolute;
+				bottom: 20px;
+				left: 0px;
+				text-align: center;
+				width: 100%;
+				padding: 0px;
+				margin: 0px;
+			}
+			
+			.oauth-area .oauth-btn {
+				display: inline-block;
+				width: 50px;
+				height: 50px;
+				background-size: 30px 30px;
+				background-position: center center;
+				background-repeat: no-repeat;
+				margin: 0px 20px;
+				/*-webkit-filter: grayscale(100%); */
+				border: solid 1px #ddd;
+				border-radius: 25px;
+			}
+			
+			.oauth-area .oauth-btn:active {
+				border: solid 1px #aaa;
+			}
+			
+			.oauth-area .oauth-btn.disabled {
+				background-color: #ddd;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<h1 class="mui-title">登录</h1>
+		</header>
+		<div class="mui-content">
+			<form id='login-form' class="mui-input-group">
+				<div class="mui-input-row">
+					<label>账号</label>
+					<input id='account' type="text" class="mui-input-clear mui-input" placeholder="请输入账号">
+				</div>
+				<div class="mui-input-row">
+					<label>密码</label>
+					<input id='password' type="password" class="mui-input-clear mui-input" placeholder="请输入密码">
+				</div>
+			</form>
+			
+			<div class="mui-content-padded">
+				<button id='login' class="mui-btn mui-btn-block mui-btn-primary">登录</button>
+				
+			</div>
+			<div class="mui-content-padded oauth-area">
+
+			</div>
+		</div>
+		<script src="js/jquery.min.js"></script>
+		<script type="text/javascript" src="js/immersed.js"></script>
+		<script type="text/javascript" src="js/common.js"></script>
+		<script type="text/javascript" src="js/aes.js"></script>
+		<script type="text/javascript" src="js/pad-iso10126-min.js"></script>
+		<script>
+			
+	        //加密部分代码
+	        var aesKey = "0123456789123456";//+plus.device.imei;//密钥
+            var ivStr = aesKey.replace("0","1");//向量
+            
+            /**
+             * 加密数据
+             * @param {type} data 待加密的字符串
+             * @param {type} keyStr 密钥
+             * @param {type} ivStr 向量
+             * @returns {unresolved} 加密后的数据
+             */
+            var aesEncrypt = function(data, keyStr, ivStr) {
+                var sendData = CryptoJS.enc.Utf8.parse(data);
+                var key = CryptoJS.enc.Utf8.parse(keyStr);
+                var iv  = CryptoJS.enc.Utf8.parse(ivStr);
+                var encrypted = CryptoJS.AES.encrypt(sendData, key,{iv:iv,mode:CryptoJS.mode.CBC,padding:CryptoJS.pad.Iso10126});
+                return CryptoJS.enc.Base64.stringify(encrypted.ciphertext);
+            };
+            
+            
+            /**
+             * 解密数据
+             * @param {type} data BASE64的数据
+             * @param {type} keyStr 解密密钥
+             * @param {type} ivStr 向量
+             * @returns {undefined} 解密后的数据
+             */
+            var aesDecrypt = function(data, keyStr, ivStr) {
+                var key = CryptoJS.enc.Utf8.parse(keyStr);
+                var iv  = CryptoJS.enc.Utf8.parse(ivStr);
+                //解密的是基于BASE64的数据，此处data是BASE64数据
+                var decrypted = CryptoJS.AES.decrypt(data, key, {iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126});    
+                return decrypted.toString(CryptoJS.enc.Utf8);
+            };	
+            
+            //登录
+            $(function(){
+				//检查是否第一次登陆
+//				if(localStorage.registed==null||localStorage.registed=="undefined"){
+//					console.log("首次打开,未注册"+localStorage.registed);
+//					window.location.href="index.html";
+//				}
+				$("#login").click(function() {
+					$.ajax({
+						type: "POST", //提交方式  
+						url: "http://open.51mypc.cn:29920/SecureCommiute/wUser_login", //路径  
+						dataType : 'jsonp',  
+        				jsonp:"callback", 
+						data: {
+							"name": aesEncrypt($("#account").val(), aesKey,ivStr),
+							"pwd": aesEncrypt($("#password").val(), aesKey,ivStr)
+						}, //数据，这里使用的是Json格式进行传输  
+						success: function(result) { //返回数据根据结果进行相应的处理  
+							var text = aesDecrypt(result.json, aesKey, ivStr);
+							alert(text);
+						},
+						error: function(result) {
+							var text = aesDecrypt(result.json, aesKey, ivStr);
+							alert(text);
+						}
+					});
+				});
+			});
+            	
+		</script>
+	
+	</body>
+
+</html>
